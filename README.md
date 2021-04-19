@@ -1,6 +1,6 @@
-# Naive Bayes com k-Means  - Aprendizagem de Máquina
+# Projeto - Aprendizagem de Máquina
 
-O Objetivo do projeto é a implementação do classificador Bayesiano em uma base de dados clusterizada com o k-Means, bem como sua comparação com o 1-NN e o Naive Bayes sem este procedimento inicial. As duas bases de dados foram retiradas do repositório [Promise](http://promise.site.uottawa.ca/SERepository/datasets-page.html).
+O Objetivo do projeto é a implementação do artigo: Pasi Fränti, Sami Sieranoja. **How much can k-means be improved by using better initialization and repeats?** Pattern Recognition, Volume 93, September 2019, Pages 95-112.
 
 ### Requisitos
 
