@@ -26,15 +26,24 @@ def main():
 
 
 def main2():
-    n_samples = 1000
+    n_samples = 898
     n_centers = 10
     random_state = 170
     X, y, centers = make_blobs(n_samples=n_samples, n_features=2, centers=n_centers, random_state=random_state, return_centers=True)
 
-    kmn = KMeansCustom(n_clusters=10, init='Rand-C',n_init=1).fit(X)
-    print(f'CI value = {kmn.compute_CI_value(centers)}')
+    # init_lst = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++',
+    #                 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    
+    init_lst = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++','Sorting', 'Projection']
+    
+    # for i in init_lst:
+    #     kmn = KMeansCustom(n_clusters=10, init=i,n_init=10, real_centers=centers).fit(X)
+    #     print(f'CI initial value = {kmn.initial_CI_value} , CI final value = {kmn.final_CI_value}')
 
-
+    kmn = KMeansCustom(n_clusters=n_centers, init='Split',n_init=1, real_centers=centers).fit(X)
+    print(f'CI initial value = {kmn.initial_CI_value} , CI final value = {kmn.final_CI_value}')
+    for i in range(n_centers):
+        print(f'Lbl {i} - elements: {len([lbl for lbl in kmn.labels_ if lbl == i])}')
 
 
 if __name__ == "__main__":
