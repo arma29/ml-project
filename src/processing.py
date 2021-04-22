@@ -24,6 +24,8 @@ def get_data_names():
 
 
 def process_data(dataset_path):
+    # TODO: Read and process txt files
+    
     data = arff.loadarff(dataset_path)
     df = pd.DataFrame(data[0])
 

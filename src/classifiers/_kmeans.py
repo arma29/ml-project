@@ -6,8 +6,6 @@ from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import KMeans
 import math
 from sklearn.cluster import kmeans_plusplus
-from skspatial.objects import Line
-from skspatial.objects import Point
 
 
 class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
@@ -56,8 +54,7 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         self.initial_CI_value = best_i_CI_value
         self.final_CI_value = best_f_CI_value
 
-        print(
-            f'Best inertia: {self.inertia_} , iteration: {self.iterations}, {self._dict[self.init].__name__}')
+        # print(f'Best inertia: {self.inertia_} , iteration: {self.iterations}, {self._dict[self.init].__name__}')
 
         return self
 
@@ -66,11 +63,10 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         self.initial_CI_value = self.__compute_max_CI_value()
 
         for i in range(self.max_iter):
-            # Reassign points to its closest center
-            dists = euclidean_distances(X, self.cluster_centers_)
-            self.labels_ = [np.argmin(x) for x in dists]
 
-            self.__update_step(X)
+            dists = self.__kmeans_assign_step(X)
+
+            self.__kmeans_update_step(X,self.n_clusters)
 
             # Calculate inertia - End condition
             curr_inertia_ = sum([min(x)**2 for x in dists])
@@ -82,31 +78,49 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
 
         return self
 
+    def __kmeans_assign_step(self, X):
+        dists = euclidean_distances(X, self.cluster_centers_)
+        self.labels_ = np.array([np.argmin(x) for x in dists])
+        return dists
+
+    def __kmeans_update_step(self, X, count):
+        # Update cluster_centers_ by mean
+        clusters = [X[self.labels_ == lbl] for lbl in range(count)]
+        # Um cluster vazio tera como centro um ponto que não interfira nos cálculos
+        means = [c.mean(axis=0) if c.size != 0 else [999999.0] * X.shape[1] for c in clusters]
+        self.cluster_centers_ = np.vstack(means)
+
     def __init_dict(self):
         self._dict['Rand-P'] = self.__rand_p_init
         self._dict['Rand-C'] = self.__rand_c_init
         self._dict['Maxmin'] = self.__maxmin_init
         self._dict['kmeans++'] = self.__kmeans_plus_plus_init
-        self._dict['Bradley'] = None
+        self._dict['Bradley'] = self.__bradley_init
         self._dict['Sorting'] = self.__sorting_init
         self._dict['Projection'] = self.__projection_init
-        self._dict['Luxburg'] = None
+        self._dict['Luxburg'] = self.__luxburg_init
         self._dict['Split'] = self.__split_init
 
     def __rand_p_init(self, X):
         # Every point is put into a randomly chosen cluster and their
         # centroids are then calculated
-        randomized = random.sample(list(range(X.shape[0])), k=X.shape[0])
-        partitions = self.__generate_partitions(randomized)
-        self.cluster_centers_ = [np.mean(X[part], axis=0)
-                                 for part in partitions]
+        # labels = random.choices(range(0, self.n_clusters), k=X.shape[0])
+        labels = np.random.choice(range(0, self.n_clusters), size=X.shape[0])
+        means = [X[labels == lbl].mean(axis=0)
+                 for lbl in range(self.n_clusters)]
+        self.cluster_centers_ = np.vstack(means)
 
     def __rand_c_init(self, X):
+        # No artigo - We use shuffling method
+        # by swapping the position of every data point with another
+        # randomly chosen point. This takes O( N ) time.
         # select n_clusters random points as centroids
         self.cluster_centers_ = X[random.sample(
             range(X.shape[0]), k=self.n_clusters)]
 
     def __maxmin_init(self, X):
+        # TODO: Need improvement
+
         # Select a random centroid
         self.cluster_centers_ = [random.choice(X)]
         nearest_centroid_arr = [999999.0]*X.shape[0]
@@ -143,7 +157,7 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         # Order the X array relative to the distance to the random point selected
         ordered = np.array(sorted(X, key=lambda x: np.linalg.norm(x - center)))
         # The centroids are then selected as every N / k th point in this order
-        indices = self.__get_nkth_indices(X)
+        indices = self.__get_nkth_indices(X, self.n_clusters)
         self.cluster_centers_ = ordered[indices]
 
     def __projection_init(self, X):
@@ -157,7 +171,7 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         #     list(range(X.shape[0])), key=lambda i: self.__get_projection(X[i], p1, p2)))
 
         # # Equaly divide the k clusters
-        # partitions = self.__generate_partitions(ordered_idx)
+        # partitions = self.__generate_partitions(ordered_idx, self.n_clusters)
 
         # self.labels_ = [-1]*X.shape[0]
         # for i in range(self.n_clusters):
@@ -171,7 +185,7 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         ordered = np.array(
             sorted(X, key=lambda x: self.__get_projection(x, p1, p2)))
         # The centroids are then selected as every N / k th point in this order
-        indices = self.__get_nkth_indices(X)
+        indices = self.__get_nkth_indices(X, self.n_clusters)
         self.cluster_centers_ = ordered[indices]
 
     def __get_projection(self, x, p1, p2):
@@ -180,42 +194,82 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
     def __split_init(self, X):
         # Split algorithm puts all points into a single cluster, and then it-
         # eratively splits one cluster at a time until k clusters are reached.
-        partitions = [np.array(list(range(X.shape[0])))]
+        partitions = [np.array(range(X.shape[0]))]
 
-        # In this paper, we therefore implement a simpler variant. We 
-        # always select the biggest cluster to be split. The split is done by 
+        # In this paper, we therefore implement a simpler variant. We
+        # always select the biggest cluster to be split. The split is done by
         # two random points in the cluster.
         for _ in range(self.n_clusters - 1):
-            biggest_partition = sorted(enumerate(partitions), key=lambda x: len(x[1]), reverse=True)[0]
+            biggest_partition = sorted(
+                enumerate(partitions), key=lambda x: len(x[1]), reverse=True)[0]
 
-            kmn = KMeans(n_clusters=2, n_init=1, init='random').fit(X[biggest_partition[1]])
+            kmn = KMeans(n_clusters=2, n_init=1, init='random').fit(
+                X[biggest_partition[1]])
 
             clusterA = []
             clusterB = []
-            for idx,lbl in enumerate(kmn.labels_):
+            for idx, lbl in enumerate(kmn.labels_):
                 if(lbl == 0):
                     clusterA.append(biggest_partition[1][idx])
                 elif(lbl == 1):
                     clusterB.append(biggest_partition[1][idx])
 
-
             del partitions[biggest_partition[0]]
             partitions.append(clusterA)
             partitions.append(clusterB)
 
-        self.cluster_centers_ = [np.mean(X[part], axis=0) for part in partitions]
-    
-    def __update_step(self, X):
-        # Update cluster_centers_ by mean
-        for j in range(self.n_clusters):
-            filter_class = [X[idx]
-                            for idx, lbl in enumerate(self.labels_) if lbl == j]
+        self.cluster_centers_ = [np.mean(X[part], axis=0)
+                                 for part in partitions]
 
-            # Check if the cluster is empty
-            if(len(filter_class) == 0):
-                self.cluster_centers_[j] = [999999.0]*X.shape[1]
-            else:
-                self.cluster_centers_[j] = np.mean(filter_class, axis=0)
+    def __bradley_init(self, X):
+        # TODO: Need improvement
+
+        # Sub-sample of size N/R where R = 10
+        R = 10
+        randomized = X[random.sample(range(X.shape[0]), k=X.shape[0])]
+        partitions = self.__generate_partitions(randomized, R)
+
+        # However, instead of taking the best clustering of the repeats, a new dataset
+        # is created from the R*k centroids.
+        rk_centroids = [KMeans(n_clusters=self.n_clusters, init='random', n_init=1).fit(
+            part).cluster_centers_ for part in partitions]
+
+        concat_centroids = rk_centroids[0]
+        for i in range(1, R):
+            concat_centroids = np.concatenate(
+                [concat_centroids, rk_centroids[i]])
+
+        # This new dataset is then clustered by repeated k-means ( R repeats).
+        kmn = KMeans(n_clusters=self.n_clusters, init='random',
+                     n_init=R).fit(concat_centroids)
+
+        self.cluster_centers_ = kmn.cluster_centers_
+
+    def __luxburg_init(self, X):
+        # (1) Select L preliminary centers uniformly at random from the
+        # given data set, where L ≈ K log(K). (No artigo usa-se k*sqrt(k))
+        L = math.floor(self.n_clusters * math.sqrt(self.n_clusters))
+        randomized = X[random.sample(range(X.shape[0]), k=X.shape[0])]
+        indices = self.__get_nkth_indices(X, L)
+        self.cluster_centers_ = randomized[indices]
+
+        # (2) Run one step of K-means, that is assign the data points to
+        # the preliminary centers and re-adjust the centers once.
+        _ = self.__kmeans_assign_step(randomized)
+        self.__kmeans_update_step(randomized,L)
+
+        # (3) Remove all centers for which the mass of the assigned data
+        # points is smaller than p0 ≈ 1/L. (No artigo elimina-se os menores clusters)
+        selected_centers = []
+        for i in range(L):
+            curr_indices = [idx for idx, lbl in enumerate(
+                self.labels_) if lbl == i]
+            if(len(curr_indices) > math.ceil(math.sqrt(self.n_clusters))):
+                selected_centers.append(self.cluster_centers_[i])
+
+        # (4) After this, the furthest point heuristic is used to select the k clusters
+        # from the preliminary set of clusters. - same as maxmin
+        self.__maxmin_init(np.array(selected_centers))
 
     def __compute_CI_value(self, pred_centers, real_centers):
         q_arr = []
@@ -235,13 +289,16 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         CI2 = self.__compute_CI_value(self.real_centers, self.cluster_centers_)
         return np.max([CI1, CI2])
 
-    def __generate_partitions(self,array):
-        k_size = math.floor((len(array)/self.n_clusters) + 0.5)
+    def __generate_partitions(self, array, count):
+        k_size = math.floor((len(array)/count) + 0.5)
         partitions = [array[i:i+k_size] for i in range(0, len(array), k_size)]
         return partitions
-    
-    def __get_nkth_indices(self, X):
-        indices = [math.floor(i*(X.shape[0]/self.n_clusters) + 0.5)
-                   for i in range(self.n_clusters)]
+
+    def __get_nkth_indices(self, X, count):
+        indices = [math.floor(i*(X.shape[0]/count) + 0.5)
+                   for i in range(count)]
         return indices
 
+    def initialize_kmeans(self, X):
+        # Measure init time
+        self._dict[self.init](X)
