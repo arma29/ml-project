@@ -1,3 +1,4 @@
+import csv
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -125,11 +126,22 @@ def plot_hq_mtx(parameters_dict):
     return fig, str(filename)
 
 
-def produce_report(parameters_dict):
-    fig, filename = plot_best_k(parameters_dict)
-    # pu.save_fig(fig, filename)
-    fig, filename = plot_acc(parameters_dict)
-    # pu.save_fig(fig, filename)
-    fig, filename = plot_hq_mtx(parameters_dict)
-    # pu.save_fig(fig, filename)
-    plt.show()
+#def produce_report(parameters_dict):
+#    fig, filename = plot_best_k(parameters_dict)
+#    # pu.save_fig(fig, filename)
+#    fig, filename = plot_acc(parameters_dict)
+#    # pu.save_fig(fig, filename)
+#    fig, filename = plot_hq_mtx(parameters_dict)
+#    # pu.save_fig(fig, filename)
+#    plt.show()
+
+def produce_report(init_method, dataset, experiment_data):
+    results_dir = get_project_results_dir()
+    report_file = results_dir / dataset / f"{init_method}.csv"
+    report_file.parent.mkdir(exist_ok=True)
+    report_file.touch(exist_ok=True)
+    with report_file.open('w') as f:
+        writer = csv.DictWriter(f, experiment_data[0].keys())
+        writer.writeheader()
+        writer.writerows(experiment_data)
+

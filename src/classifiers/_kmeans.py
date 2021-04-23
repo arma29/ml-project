@@ -13,8 +13,8 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
     def __init__(self, n_clusters=8, init='k-means++', n_init=10, real_centers=None):
         init_lst = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++',
                     'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
-        if(init not in init_lst):
-            raise ValueError("Erro")
+        if init not in init_lst:
+            raise ValueError(f'"{init}" é um método de inicialização desconhecido')
 
         self.init = init
         self.n_clusters = n_clusters
