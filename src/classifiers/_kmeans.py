@@ -201,10 +201,10 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         # two random points in the cluster.
         for i in range(1, self.n_clusters):
             biggest_idx, biggest_partition = max(
-                enumerate(partitions), 
+                enumerate(partitions),
                 key=lambda x: len(x[1])
             )
-            
+
             # K-means is then applied but only within the cluster that was split as done in
             kmn = KMeans(n_clusters=2, n_init=1, init='random',
                          algorithm='full').fit(X[biggest_partition])
@@ -276,7 +276,7 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
 
     def __get_nkth_indices(self, array, N):
         size = math.floor((N/self.n_clusters) + 0.5)
-        return array[::size]
+        return array[size::size]
 
     def initialize_kmeans(self, X):
         # Measure init time
