@@ -275,8 +275,8 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         return np.max([CI1, CI2])
 
     def __get_nkth_indices(self, array, N):
-        size = math.floor((N/self.n_clusters) + 0.5)
-        return array[size::size]
+        size = int(N/self.n_clusters) if N % self.n_clusters == 0 else math.ceil(N/self.n_clusters)
+        return array[::size]
 
     def initialize_kmeans(self, X):
         # Measure init time
