@@ -233,23 +233,13 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
         self.cluster_centers_ = kmn.cluster_centers_
 
     def __luxburg_init(self, X):
-        # (1) Select L preliminary centers uniformly at random from the
-        # given data set, where L ≈ K log(K). (No artigo usa-se k*sqrt(k))
+        # Luxburg [50] first selects k ∗SQRT( k ) preliminary clusters using
+        # k-means and then eliminates the smallest ones. 
         L = math.floor(self.n_clusters * math.sqrt(self.n_clusters))
-        seeds = self.random_state.permutation(X.shape[0])[:L]
-        self.cluster_centers_ = X[seeds]
-
-        # (2) Run one step of K-means, that is assign the data points to
-        # the preliminary centers and re-adjust the centers once.
-        _ = self.__kmeans_assign_step(X)
-        self.__kmeans_update_step(X, L)
-
-        # (3) Remove all centers for which the mass of the assigned data
-        # points is smaller than p0 ≈ 1/L. (No artigo elimina-se os menores clusters)
-        limit = math.ceil(math.sqrt(self.n_clusters))
-        indices = [ i for i in range(L) if len(self.labels_[self.labels_ == i]) > limit ]
-        self.cluster_centers_ = self.cluster_centers_[indices]
-
+        kmn = KMeans(n_clusters=L, init='random', n_init=1, algorithm='full').fit(X)
+        sizes = [len(kmn.labels_[kmn.labels_ == i]) for i in range(L)]
+        limit = np.mean(sizes)
+        self.cluster_centers_ = kmn.cluster_centers_[np.where(sizes > limit)[0]]
 
         # (4) After this, the furthest point heuristic is used to select the k clusters
         # from the preliminary set of clusters. - same as maxmin
