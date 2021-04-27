@@ -140,7 +140,7 @@ def produce_report(init_method, dataset, experiment_data):
     report_file = results_dir / dataset / f"{init_method}.csv"
     report_file.parent.mkdir(exist_ok=True)
     report_file.touch(exist_ok=True)
-    with report_file.open('w') as f:
+    with report_file.open('a') as f:
         writer = csv.DictWriter(f, experiment_data[0].keys())
         writer.writeheader()
         writer.writerows(experiment_data)

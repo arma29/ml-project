@@ -15,20 +15,34 @@ from sklearn.cluster import KMeans
 
 def main():
     init_methods = [
-         'Rand-P',
-         'Rand-C',
-         'Maxmin',
-         'kmeans++',
-         #'Bradley',
-         'Sorting',
-         'Projection',
-         'Luxburg',
-         'Split',
+        'Rand-P',
+        'Rand-C',
+        'Maxmin',
+        'kmeans++',
+        'Bradley',
+        'Sorting',
+        'Projection',
+        'Luxburg',
+        'Split',
     ]
-
+    main_datasets = [
+        'a1',
+        'a2',
+        'a3',
+        'b1',
+        'b2',
+        'dim32',
+        's1',
+        's2',
+        's3',
+        's4',
+        'unb',
+    ]
     for dataset_name, data, centers in tqdm(list(processing.get_data()), desc="Datasets"):
+        if dataset_name not in main_datasets:
+            continue
         for init_method in tqdm(init_methods, desc="Init methods"):
-            experiment_data = run_experiment(init_method, data, centers, repetitions=30)
+            experiment_data = run_experiment(init_method, data, centers, repetitions=5000)
             reporting.produce_report(init_method, dataset_name, experiment_data)
 
 
@@ -79,4 +93,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main2()
+    main()
