@@ -1,7 +1,9 @@
 import csv
+from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
@@ -145,3 +147,163 @@ def produce_report(init_method, dataset, experiment_data):
         writer.writeheader()
         writer.writerows(experiment_data)
 
+
+def table3():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    table = LatexTable()
+
+    table.add_caption("Resultados para comparação com a Tabela 3 do artigo original.")
+
+    table.add_line()
+    table.add_header(['CI-values (initial)'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'Aver.', ]
+    table.add_header(header)
+    averages = []
+    for init_method in init_methods:
+        row = []
+        row.append(init_method)
+        means = []
+
+        for dataset in header[1:-1]:
+            filepath = results_dir / dataset / f"{init_method}.csv"
+
+            if not filepath.exists():
+                means.append(0.0)
+                row.append('0.0')
+                continue
+
+            df = pd.read_csv(filepath)
+            mean = df['ci_initial'].mean()
+            means.append(mean)
+            row.append(f"{mean:.1f}")
+
+        average = np.mean(means)
+        averages.append(average)
+        row.append(f"\\bfseries{{{average:.1f}}}")
+        table.add_row(row)
+
+    table.add_line()
+    table.add_header(['CI-values (final)'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'Aver.', 'Impr.', ]
+    table.add_header(header)
+    for init_method, initial_average in zip(init_methods, averages):
+        row = []
+        row.append(init_method)
+        means = []
+
+        for dataset in header[1:-2]:
+            filepath = results_dir / dataset / f"{init_method}.csv"
+
+            if not filepath.exists():
+                means.append(0.0)
+                row.append('0.0')
+                continue
+
+            df = pd.read_csv(filepath)
+            mean = df['ci_final'].mean()
+            means.append(mean)
+            row.append(f"{mean:.1f}")
+
+        average = np.mean(means)
+        row.append(f"\\bfseries{{{average:.1f}}}")
+        improvement = 100.0 - (average / initial_average)*100
+        row.append(f"\\bfseries{{{improvement:.0f}\\%}}")
+        table.add_row(row)
+
+    table.add_line()
+    table.add_header(['Success-\%'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'Aver.', 'Fails', ]
+    table.add_header(header)
+    for init_method, initial_average in zip(init_methods, averages):
+        row = []
+        row.append(init_method)
+        percentages = []
+
+        for dataset in header[1:-2]:
+            filepath = results_dir / dataset / f"{init_method}.csv"
+
+            if not filepath.exists():
+                percentages.append(0)
+                row.append('0\%')
+                continue
+
+            df = pd.read_csv(filepath)
+            zeros = df['ci_final'].value_counts().get(0, 0)
+            n_rows = df.shape[0]
+            percentage = (zeros / n_rows) * 100
+            percentages.append(percentage)
+            row.append(f"{percentage:.0f}\\%")
+
+        average = np.mean(percentages)
+        row.append(f"\\bfseries{{{average:.0f}\\%}}")
+        row.append(f"\\bfseries{{{Counter(percentages)[0]}}}")
+        table.add_row(row)
+
+    table.add_line()
+    table.add_header(['Number of iterations'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'Aver.', ]
+    table.add_header(header)
+    for init_method, initial_average in zip(init_methods, averages):
+        row = []
+        row.append(init_method)
+        means = []
+
+        for dataset in header[1:-1]:
+            filepath = results_dir / dataset / f"{init_method}.csv"
+
+            if not filepath.exists():
+                percentages.append(0)
+                row.append('0\%')
+                continue
+
+            df = pd.read_csv(filepath)
+            mean = df['iterations'].mean()
+            means.append(mean)
+            row.append(f"{mean:.0f}")
+
+        average = np.mean(means)
+        row.append(f"\\bfseries{{{average:.0f}}}")
+        table.add_row(row)
+
+    table.add_line()
+    result = table.to_str()
+    print(result)
+    return result
+
+
+class LatexTable:
+    def __init__(self):
+        self.table = []
+        self.caption = ""
+
+    def add_header(self, header):
+        formatted = [f"\\bfseries{{{h}}}" for h in header]
+        self.table.extend([
+            f"{' & '.join(formatted)} \\\\",
+            "\\hline",
+            ])
+
+    def add_row(self, row):
+        self.table.append(
+            f"{' & '.join(row)} \\\\"
+        )
+
+    def add_line(self):
+        self.table.append(
+            "\\hline",
+        )
+
+    def add_caption(self, caption):
+        self.caption = caption
+
+    def to_str(self):
+        self.table.insert(0, "\\begin{table}")
+        self.table.insert(1, "\\centering")
+        self.table.insert(2, "\\resizebox{\\columnwidth}{!}{\\begin{tabular}{cccccccccccccccccccc}")
+        self.table.extend([
+            "\\end{tabular}}",
+            f"\\caption{{{self.caption}}}",
+            "\\end{table}",
+        ])
+        return "\n".join(self.table)
