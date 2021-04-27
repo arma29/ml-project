@@ -234,12 +234,12 @@ class KMeansCustom(TransformerMixin, ClusterMixin, BaseEstimator):
 
     def __luxburg_init(self, X):
         # Luxburg [50] first selects k ∗SQRT( k ) preliminary clusters using
-        # k-means and then eliminates the smallest ones. 
+        # k-means and then eliminates the smallest ones.
         L = math.floor(self.n_clusters * math.sqrt(self.n_clusters))
         kmn = KMeans(n_clusters=L, init='random', n_init=1, algorithm='full').fit(X)
         sizes = [len(kmn.labels_[kmn.labels_ == i]) for i in range(L)]
         limit = np.mean(sizes)
-        self.cluster_centers_ = kmn.cluster_centers_[np.where(sizes > limit)[0]]
+        self.cluster_centers_ = kmn.cluster_centers_[np.where(sizes >= limit)[0]]
 
         # (4) After this, the furthest point heuristic is used to select the k clusters
         # from the preliminary set of clusters. - same as maxmin
