@@ -307,3 +307,105 @@ class LatexTable:
             "\\end{table}",
         ])
         return "\n".join(self.table)
+
+
+def fig13():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    high_overlap_datasets = [
+        'g2-2-40',
+        'g2-2-50',
+        'g2-2-60',
+        'g2-2-70',
+        'g2-2-80',
+        'g2-2-90',
+        'g2-2-100',
+        'g2-4-50',
+        'g2-4-60',
+        'g2-4-70',
+        'g2-4-80',
+        'g2-4-90',
+        'g2-4-100',
+        'g2-8-70',
+        'g2-8-80',
+        'g2-8-90',
+        'g2-8-100',
+        'g2-16-90',
+        'g2-16-100',
+    ]
+
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    axs = fig.subplots(ncols=2)
+
+    axs[0].title.set_text(f'Baixa sobreposição')
+
+    initial = []
+    final = []
+    for init_method in init_methods:
+        initial_percentages = []
+        final_percentages = []
+        for dataset in results_dir.glob('g2*'):
+            if dataset.name in high_overlap_datasets:
+                continue
+            df = pd.read_csv(dataset / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            initial_zeros = df['ci_initial'].value_counts().get(0, 0)
+            initial_percentage = (initial_zeros / n_rows) * 100
+            initial_percentages.append(initial_percentage)
+            final_zeros = df['ci_final'].value_counts().get(0, 0)
+            final_percentage = (final_zeros / n_rows) * 100
+            final_percentages.append(final_percentage)
+        initial.append(np.mean(initial_percentages))
+        final.append(np.mean(final_percentages)-np.mean(initial_percentages))
+
+    axs[0].bar(init_methods, final, label='Final')
+    axs[0].bar(init_methods, initial, label='Inicial')
+
+    axs[0].set_ylabel('Taxa de sucesso (%)')
+
+    axs[0].tick_params('x', labelrotation=70)
+
+    axs[0].set_yticks([0, 20, 40, 60, 80, 100])
+    axs[0].set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+
+    axs[0].grid(b=False, axis='x')
+
+    axs[1].title.set_text(f'Alta sobreposição')
+
+    initial = []
+    final = []
+    for init_method in init_methods:
+        initial_percentages = []
+        final_percentages = []
+        for dataset in high_overlap_datasets:
+            df = pd.read_csv(results_dir / dataset / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            initial_zeros = df['ci_initial'].value_counts().get(0, 0)
+            initial_percentage = (initial_zeros / n_rows) * 100
+            initial_percentages.append(initial_percentage)
+            final_zeros = df['ci_final'].value_counts().get(0, 0)
+            final_percentage = (final_zeros / n_rows) * 100
+            final_percentages.append(final_percentage)
+        initial.append(np.mean(initial_percentages))
+        final.append(np.mean(final_percentages)-np.mean(initial_percentages))
+
+    axs[1].bar(init_methods, final, label='Final')
+    axs[1].bar(init_methods, initial, label='Inicial')
+
+    axs[1].tick_params('x', labelrotation=70)
+
+    axs[1].set_yticks([0, 20, 40, 60, 80, 100])
+    axs[1].set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+
+    axs[1].grid(b=False, axis='x')
+
+    plt.legend()
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('overlap.eps')
+
+    return fig, str(filename)
