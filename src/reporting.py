@@ -406,6 +406,6 @@ def fig13():
     plt.legend()
     plt.tight_layout()
 
-    filename = get_project_results_dir().joinpath('overlap.eps')
+    filename = get_project_results_dir().joinpath('fig13.eps')
 
     return fig, str(filename)
