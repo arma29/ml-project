@@ -448,3 +448,39 @@ def fig14():
     filename = get_project_results_dir().joinpath('fig14.eps')
 
     return fig, str(filename)
+
+
+def fig15():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    cluster_sizes = list(range(10, 101, 10))
+    for init_method in init_methods:
+        relative_cis = []
+        for cluster_size in cluster_sizes:
+            df = pd.read_csv(results_dir / f"b2-sub-{cluster_size}" / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            ci_mean = df['ci_final'].mean()
+            relative_cis.append(ci_mean / cluster_size)
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(cluster_sizes, relative_cis, label=label)
+
+    ax.set_xticks(cluster_sizes)
+    ax.set_xlabel('Clusters (k)')
+
+    ax.set_ylabel('CI relativo (CI/k)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig15.eps')
+
+    return fig, str(filename)
