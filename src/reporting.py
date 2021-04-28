@@ -484,3 +484,175 @@ def fig15():
     filename = get_project_results_dir().joinpath('fig15.eps')
 
     return fig, str(filename)
+
+
+def fig16_1():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.title.set_text(f'Dataset DIM (CI inicial)')
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    dimensions_sizes = ['32', '64', '128', '256', '512', '1024']
+
+    for init_method in init_methods:
+        initial_percentages = []
+        for dimensions_size in dimensions_sizes:
+            df = pd.read_csv(results_dir / f"dim{dimensions_size}" / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            initial_zeros = df['ci_initial'].value_counts().get(0, 0)
+            initial_percentage = (initial_zeros / n_rows) * 100
+            initial_percentages.append(initial_percentage)
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(dimensions_sizes, initial_percentages, label=label)
+
+    ax.set_xticks(dimensions_sizes)
+    ax.set_xlabel('Dimensões')
+
+    ax.set_yticks([0, 20, 40, 60, 80, 100])
+    ax.set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+    ax.set_ylabel('Taxa de sucesso (%)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig16_1.eps')
+
+    return fig, str(filename)
+
+
+def fig16_2():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.title.set_text(f'Dataset DIM (CI final)')
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    dimensions_sizes = ['32', '64', '128', '256', '512', '1024']
+
+    for init_method in init_methods:
+        final_percentages = []
+        for dimensions_size in dimensions_sizes:
+            df = pd.read_csv(results_dir / f"dim{dimensions_size}" / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            final_zeros = df['ci_final'].value_counts().get(0, 0)
+            final_percentage = (final_zeros / n_rows) * 100
+            final_percentages.append(final_percentage)
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(dimensions_sizes, final_percentages, label=label)
+
+    ax.set_xticks(dimensions_sizes)
+    ax.set_xlabel('Dimensões')
+
+    ax.set_yticks([0, 20, 40, 60, 80, 100])
+    ax.set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+    ax.set_ylabel('Taxa de sucesso (%)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig16_2.eps')
+
+    return fig, str(filename)
+
+
+def fig16_3():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.title.set_text(f'Dataset G2 (CI inicial)')
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    dimensions_sizes = ['1', '2', '4', '8', '16', '32', '64', '128', '256', '512', '1024']
+    std_sizes = list(range(10, 101, 10))
+
+    for init_method in init_methods:
+        initial_percentages_means = []
+        for dimensions_size in dimensions_sizes:
+            initial_percentages = []
+            for std_size in std_sizes:
+                df = pd.read_csv(results_dir / f"g2-{dimensions_size}-{std_size}" / f"{init_method}.csv")
+                n_rows = df.shape[0]
+                initial_zeros = df['ci_initial'].value_counts().get(0, 0)
+                initial_percentage = (initial_zeros / n_rows) * 100
+                initial_percentages.append(initial_percentage)
+            initial_percentages_means.append(np.mean(initial_percentages))
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(dimensions_sizes, initial_percentages_means, label=label)
+
+    ax.set_xticks(dimensions_sizes)
+    ax.set_xlabel('Dimensões')
+
+    ax.set_yticks([0, 20, 40, 60, 80, 100])
+    ax.set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+    ax.set_ylabel('Taxa de sucesso (%)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig16_3.eps')
+
+    return fig, str(filename)
+
+
+def fig16_4():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.title.set_text(f'Dataset G2 (CI final)')
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    dimensions_sizes = ['1', '2', '4', '8', '16', '32', '64', '128', '256', '512', '1024']
+    std_sizes = list(range(10, 101, 10))
+
+    for init_method in init_methods:
+        final_percentages_means = []
+        for dimensions_size in dimensions_sizes:
+            final_percentages = []
+            for std_size in std_sizes:
+                df = pd.read_csv(results_dir / f"g2-{dimensions_size}-{std_size}" / f"{init_method}.csv")
+                n_rows = df.shape[0]
+                final_zeros = df['ci_final'].value_counts().get(0, 0)
+                final_percentage = (final_zeros / n_rows) * 100
+                final_percentages.append(final_percentage)
+            final_percentages_means.append(np.mean(final_percentages))
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(dimensions_sizes, final_percentages_means, label=label)
+
+    ax.set_xticks(dimensions_sizes)
+    ax.set_xlabel('Dimensões')
+
+    ax.set_yticks([99, 99.20, 99.40, 99.60, 99.80, 100])
+    ax.set_yticklabels(['99%', '99,2%', '99,4%', '99,6%', '99,8%', '100%'])
+    ax.set_ylabel('Taxa de sucesso (%)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig16_4.eps')
+
+    return fig, str(filename)
