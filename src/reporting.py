@@ -409,3 +409,42 @@ def fig13():
     filename = get_project_results_dir().joinpath('fig13.eps')
 
     return fig, str(filename)
+
+
+def fig14():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    pu.figure_setup()
+
+    fig_size = pu.get_fig_size(12, 9)
+    fig = plt.figure(figsize=(fig_size))
+
+    ax = fig.add_subplot()
+
+    ax.set_prop_cycle(color=plt.cm.Set1.colors)
+
+    cluster_sizes = list(range(10, 101, 10))
+    for init_method in init_methods:
+        final_percentages = []
+        for cluster_size in cluster_sizes:
+            df = pd.read_csv(results_dir / f"b2-sub-{cluster_size}" / f"{init_method}.csv")
+            n_rows = df.shape[0]
+            final_zeros = df['ci_final'].value_counts().get(0, 0)
+            final_percentage = (final_zeros / n_rows) * 100
+            final_percentages.append(final_percentage)
+        label = "kmeanspp" if init_method == "kmeans++" else init_method
+        ax.plot(cluster_sizes, final_percentages, label=label)
+
+    ax.set_xticks(cluster_sizes)
+    ax.set_xlabel('Clusters (k)')
+
+    ax.set_yticks([0, 20, 40, 60, 80, 100])
+    ax.set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+    ax.set_ylabel('Taxa de sucesso (%)')
+
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+
+    filename = get_project_results_dir().joinpath('fig14.eps')
+
+    return fig, str(filename)
