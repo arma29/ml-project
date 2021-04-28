@@ -358,6 +358,36 @@ def table5():
     return result
 
 
+def table6():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    table = LatexTable()
+
+    table.add_caption("CI mínimo atingido em 200k iterações para cada método nos datasets A3 e Unbalanced.")
+
+    for dataset in ["a3", "unb"]:
+        table.add_line()
+        table.add_header([dataset])
+        header = [ 'Método', 'CI mínimo', 'Iteração']
+        table.add_header(header)
+        for init_method in init_methods:
+            row = []
+            row.append(init_method)
+
+            filepath = results_dir / f"{dataset}-200k" / f"{init_method}.csv"
+            df = pd.read_csv(filepath)
+            min_value = df['ci_final'].min()
+            row.append(str(min_value))
+            min_iter = df['ci_final'].iloc[min_value]
+            row.append(str(min_iter))
+            table.add_row(row)
+
+    table.add_line()
+    result = table.to_str()
+    print(result)
+    return result
+
+
 class LatexTable:
     def __init__(self):
         self.table = []
