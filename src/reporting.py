@@ -272,6 +272,92 @@ def table3():
     return result
 
 
+def table5():
+    results_dir = get_project_results_dir()
+    init_methods = ['Rand-P', 'Rand-C', 'Maxmin', 'kmeans++', 'Bradley', 'Sorting', 'Projection', 'Luxburg', 'Split']
+    table = LatexTable()
+
+    table.add_caption("Resultados para comparação com a Tabela 5 do artigo original.")
+
+    table.add_line()
+    table.add_header(['CI-values'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'KM', 'RKM', ]
+    table.add_header(header)
+    km_averages = []
+    for init_method in init_methods:
+        means = []
+        for dataset in header[1:-2]:
+            filepath = results_dir / dataset / f"{init_method}.csv"
+            df = pd.read_csv(filepath)
+            mean = df['ci_final'].mean()
+            means.append(mean)
+
+        average = np.mean(means)
+        km_averages.append(average)
+
+    for init_method, km_average in zip(init_methods, km_averages):
+        row = []
+        row.append(init_method)
+        means = []
+
+        for dataset in header[1:-2]:
+            filepath = results_dir / f"{dataset}-r100" / f"{init_method}.csv"
+            df = pd.read_csv(filepath)
+            mean = df['ci_final'].mean()
+            means.append(mean)
+            row.append(f"{mean:.1f}")
+
+        row.append(f"\\bfseries{{{km_average:.1f}}}")
+        average = np.mean(means)
+        row.append(f"\\bfseries{{{average:.1f}}}")
+        table.add_row(row)
+
+    table.add_line()
+    table.add_header(['Success-\%'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32', 'Aver.', 'Fails', ]
+    table.add_header(header)
+    for init_method in init_methods:
+        row = []
+        row.append(init_method)
+        percentages = []
+
+        for dataset in header[1:-2]:
+            filepath = results_dir / f"{dataset}-r100" / f"{init_method}.csv"
+            df = pd.read_csv(filepath)
+            zeros = df['ci_final'].value_counts().get(0, 0)
+            n_rows = df.shape[0]
+            percentage = (zeros / n_rows) * 100
+            percentages.append(percentage)
+            row.append(f"{percentage:.0f}\\%")
+
+        average = np.mean(percentages)
+        row.append(f"\\bfseries{{{average:.0f}\\%}}")
+        row.append(f"\\bfseries{{{Counter(percentages)[0]}}}")
+        table.add_row(row)
+
+    table.add_line()
+    table.add_header(['Running time (s)'])
+    header = [ 'Method', 's1', 's2', 's3', 's4', 'a1', 'a2', 'a3', 'unb', 'b1', 'b2', 'dim32' ]
+    table.add_header(header)
+    for init_method in init_methods:
+        row = []
+        row.append(init_method)
+
+        for dataset in header[1:]:
+            filepath = results_dir / f"{dataset}-r100" / f"{init_method}.csv"
+            df = pd.read_csv(filepath)
+            mean = df['elapsed_time'].mean()
+            means.append(mean)
+            row.append(f"{mean:.1f}")
+
+        table.add_row(row)
+
+    table.add_line()
+    result = table.to_str()
+    print(result)
+    return result
+
+
 class LatexTable:
     def __init__(self):
         self.table = []
