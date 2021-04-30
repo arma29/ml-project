@@ -368,8 +368,9 @@ def fig13():
         initial.append(np.mean(initial_percentages))
         final.append(np.mean(final_percentages)-np.mean(initial_percentages))
 
-    axs[0].bar(init_methods_bar, final, label='Final')
     axs[0].bar(init_methods_bar, initial, label='Inicial')
+    axs[0].bar(init_methods_bar, initial, label='Inicial')
+    axs[0].bar(init_methods_bar, final, bottom=initial, label='Final')
 
     axs[0].set_ylabel('Taxa de sucesso (\%)')
 
@@ -400,8 +401,8 @@ def fig13():
         final.append(np.mean(final_percentages)-np.mean(initial_percentages))
 
     init_methods[3] = 'KMeansPP'
-    axs[1].bar(init_methods_bar, final, label='Final')
     axs[1].bar(init_methods_bar, initial, label='Inicial')
+    axs[1].bar(init_methods_bar, final, bottom=initial, label='Final')
 
     axs[1].tick_params('x', labelrotation=70)
 
