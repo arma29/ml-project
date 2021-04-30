@@ -259,7 +259,7 @@ def table6():
             row = []
             row.append(init_method)
 
-            filepath = results_dir / f"{dataset}-200k" / f"{init_method}.csv"
+            filepath = results_dir / f"{dataset}-200-r100" / f"{init_method}.csv"
             df = pd.read_csv(filepath)
             min_value = df['ci_final'].min()
             row.append(str(min_value))
