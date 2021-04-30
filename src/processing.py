@@ -1,10 +1,5 @@
-from os import listdir
-from os.path import isfile, join
 
-import numpy as np
 import pandas as pd
-from scipy.io import arff
-from sklearn.preprocessing import StandardScaler
 
 from src.utils import get_project_data_dir
 
@@ -25,7 +20,5 @@ def get_data():
 
 
 def process_data(dataset_path):
-    # TODO: Read and process txt files
-
     df = pd.read_csv(dataset_path, sep="\s+", header=None)
     return df.values
