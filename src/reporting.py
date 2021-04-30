@@ -354,8 +354,9 @@ def fig13():
         initial_percentages = []
         final_percentages = []
         for dataset in results_dir.glob('g2*'):
-            if dataset.name in high_overlap_datasets:
+            if dataset.stem in high_overlap_datasets:
                 continue
+
             df = pd.read_csv(dataset / f"{init_method}.csv")
             n_rows = df.shape[0]
             initial_zeros = df['ci_initial'].value_counts().get(0, 0)
