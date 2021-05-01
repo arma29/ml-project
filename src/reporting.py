@@ -368,14 +368,15 @@ def fig13():
         initial.append(np.mean(initial_percentages))
         final.append(np.mean(final_percentages)-np.mean(initial_percentages))
 
-    axs[0].bar(init_methods_bar, initial, label='Inicial')
-    axs[0].bar(init_methods_bar, initial, label='Inicial')
-    axs[0].bar(init_methods_bar, final, bottom=initial, label='Final')
+    # axs[0].bar(init_methods_bar, initial, label='Inicial')
+    axs[0].bar(init_methods_bar, initial, label='Inicial', color='gray',edgecolor='black')
+    axs[0].bar(init_methods_bar, final, bottom=initial, label='Final', color='white',edgecolor='black')
 
     axs[0].set_ylabel('Taxa de sucesso (\%)')
 
     axs[0].tick_params('x', labelrotation=70)
 
+    axs[0].set_ylim([0,110])
     axs[0].set_yticks([0, 20, 40, 60, 80, 100])
     axs[0].set_yticklabels(['0\%', '20\%', '40\%', '60\%', '80\%', '100\%'])
 
@@ -401,11 +402,12 @@ def fig13():
         final.append(np.mean(final_percentages)-np.mean(initial_percentages))
 
     init_methods[3] = 'KMeansPP'
-    axs[1].bar(init_methods_bar, initial, label='Inicial')
-    axs[1].bar(init_methods_bar, final, bottom=initial, label='Final')
+    axs[1].bar(init_methods_bar, initial, label='Inicial', color='gray',edgecolor='black')
+    axs[1].bar(init_methods_bar, final, bottom=initial, label='Final',color='white',edgecolor='black')
 
     axs[1].tick_params('x', labelrotation=70)
 
+    axs[1].set_ylim([0,110])
     axs[1].set_yticks([0, 20, 40, 60, 80, 100])
     axs[1].set_yticklabels(['0\%', '20\%', '40\%', '60\%', '80\%', '100\%'])
 
